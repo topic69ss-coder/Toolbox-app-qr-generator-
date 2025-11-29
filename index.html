@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Toolbox - QR Generator</title>
+<meta name="description" content="Toolbox - Calculator, converters and QR generator" />
+<style>
+  :root{
+    --bg:#0f172a; --card:#ffffff; --accent1:#4c6ef5; --accent2:#5f3dc4; --accent3:#f59f00;
+    --muted:#6b7280; --safe:#10b981;
+  }
+  html,body{height:100%;margin:0;font-family:system-ui,Roboto,-apple-system,"Segoe UI",Arial;background:
+    linear-gradient(180deg,var(--accent1),var(--accent2)); color:#0b1220; -webkit-font-smoothing:antialiased;}
+  .app{max-width:900px;margin:0 auto;padding:18px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .logo{width:54px;height:54px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent3));display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:18px;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+  h1{margin:0;font-size:20px;color:white}
+  .subtitle{color:rgba(255,255,255,.85);font-size:12px;margin-top:4px}
+
+  main{background:transparent;margin-top:12px}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,.12);cursor:pointer;min-height:90px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;transition:transform .12s ease}
+  .card:active{transform:scale(.997)}
+  .card h2{margin:0;font-size:16px;color:#0b1220}
+  .card p{margin:6px 0 0 0;color:var(--muted);font-size:12px}
+
+  /* sections */
+  section{display:none;background:var(--card);border-radius:12px;padding:12px;margin-top:12px;box-shadow:0 6px 20px rgba(2,6,23,.12)}
+  section.active{display:block}
+
+  /* calculator */
+  .calc-screen{background:#0b1220;color:white;padding:10px;border-radius:8px;font-size:22px;text-align:right}
+  .buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .btn{background:linear-gradient(180deg,#f3f4f6,#fff);padding:14px;border-radius:8px;text-align:center;font-weight:700;box-shadow:0 2px 6px rgba(2,6,23,.06);cursor:pointer;user-select:none}
+  .btn.op{background:linear-gradient(180deg,var(--accent1),var(--accent2));color:white}
+  .btn.zero{grid-column:span 2}
+
+  /* converters */
+  .row{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .input, .select{flex:1;padding:10px;border-radius:8px;border:1px solid #e6e9ef}
+
+  /* qr */
+  #qrcode-wrap{display:flex;flex-direction:column;gap:8px;align-items:center}
+  #qrcode{background:white;padding:12px;border-radius:8px}
+  .small{font-size:12px;color:var(--muted)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+  footer{margin-top:18px;color:white;font-size:12px;text-align:center}
+
+  /* responsive */
+  @media(max-width:560px){.grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">TB</div>
+      <div>
+        <h1>Toolbox - QR Generator</h1>
+        <div class="subtitle">Calculator • Converters • QR (files & text)</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="grid" id="home-cards">
+        <div class="card" data-open="calculator">
+          <h2>Calculator</h2><p>Virtual calculator — click buttons to calculate</p>
+        </div>
+        <div class="card" data-open="converters">
+          <h2>Converters</h2><p>Weight • Currency • Distance</p>
+        </div>
+        <div class="card" data-open="qr">
+          <h2>QR Generator</h2><p>Text / URL / Small files (img, txt, pdf small)</p>
+        </div>
+        <div class="card" data-open="about">
+          <h2>About & Privacy</h2><p>Privacy policy and app info</p>
+        </div>
+      </div>
+
+      <!-- CALCULATOR -->
+      <section id="calculator">
+        <button onclick="goHome()" style="margin-bottom:10px">◀ Back</button>
+        <div class="calc-screen" id="calc-screen">0</div>
+        <div class="buttons" id="calc-buttons">
+          <!-- row1 -->
+          <div class="btn" onclick="calcPress('7')">7</div>
+          <div class="btn" onclick="calcPress('8')">8</div>
+          <div class="btn" onclick="calcPress('9')">9</div>
+          <div class="btn op" onclick="calcPress('/')">÷</div>
+          <!-- row2 -->
+          <div class="btn" onclick="calcPress('4')">4</div>
+          <div class="btn" onclick="calcPress('5')">5</div>
+          <div class="btn" onclick="calcPress('6')">6</div>
+          <div class="btn op" onclick="calcPress('*')">×</div>
+          <!-- row3 -->
+          <div class="btn" onclick="calcPress('1')">1</div>
+          <div class="btn" onclick="calcPress('2')">2</div>
+          <div class="btn" onclick="calcPress('3')">3</div>
+          <div class="btn op" onclick="calcPress('-')">−</div>
+          <!-- row4 -->
+          <div class="btn zero" onclick="calcPress('0')">0</div>
+          <div class="btn" onclick="calcPress('.')">.</div>
+          <div class="btn op" onclick="calcPress('+')">+</div>
+          <!-- row5 -->
+          <div class="btn" onclick="calcClear()">C</div>
+          <div class="btn" onclick="calcBack()">⌫</div>
+          <div class="btn op" style="grid-column:span 2" onclick="calcEval()">=</div>
+        </div>
+      </section>
+
+      <!-- CONVERTERS -->
+      <section id="converters">
+        <button onclick="goHome()" style="margin-bottom:10px">◀ Back</button>
+        <h3>Weight Converter</h3>
+        <div class="row">
+          <input class="input" id="w-value" placeholder="Value">
+          <select class="select" id="w-from">
+            <option value="kg">kg</option><option value="g">g</option><option value="lb">lb</option><option value="ton">ton</option>
+          </select>
+          <select class="select" id="w-to">
+            <option value="g">g</option><option value="kg">kg</option><option value="lb">lb</option><option value="ton">ton</option>
+          </select>
+        </div>
+        <div style="margin-top:8px"><button class="btn" onclick="weightConvert()">Convert</button> <span id="w-result" class="small"></span></div>
+
+        <hr style="margin-top:12px">
+
+        <h3>Currency Converter (offline rates)</h3>
+        <div class="small">Note: Offline rates — update later for live rates</div>
+        <div class="row" style="margin-top:8px">
+          <input class="input" id="c-value" placeholder="Amount">
+          <select class="select" id="c-from">
+            <option value="INR">INR</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option>
+          </select>
+          <select class="select" id="c-to">
+            <option value="USD">USD</option><option value="INR">INR</option><option value="EUR">EUR</option><option value="GBP">GBP</option>
+          </select>
+        </div>
+        <div style="margin-top:8px"><button class="btn" onclick="currencyConvert()">Convert</button> <span id="c-result" class="small"></span></div>
+
+        <hr style="margin-top:12px">
+
+        <h3>Distance Converter</h3>
+        <div class="row">
+          <input class="input" id="d-value" placeholder="Value">
+          <select class="select" id="d-from">
+            <option value="m">m</option><option value="km">km</option><option value="cm">cm</option><option value="ft">ft</option><option value="mi">mi</option>
+          </select>
+          <select class="select" id="d-to">
+            <option value="km">km</option><option value="m">m</option><option value="cm">cm</option><option value="ft">ft</option><option value="mi">mi</option>
+          </select>
+        </div>
+        <div style="margin-top:8px"><button class="btn" onclick="distanceConvert()">Convert</button> <span id="d-result" class="small"></span></div>
+      </section>
+
+      <!-- QR -->
+      <section id="qr">
+        <button onclick="goHome()" style="margin-bottom:10px">◀ Back</button>
+        <h3>QR Generator</h3>
+        <div class="small">You can enter text/URL or choose a small file (img, txt, pdf). Files larger than ~2 KB cannot be reliably encoded into QR; upload and use a URL QR instead.</div>
+
+        <div style="margin-top:8px">
+          <input class="input" id="qr-text" placeholder="Enter text or URL">
+        </div>
+
+        <div style="margin-top:8px">
+          <label class="small">Or choose file (small):</label>
+          <input type="file" id="qr-file" />
+          <div id="file-info" class="small"></div>
+        </div>
+
+        <div style="margin-top:8px" class="actions">
+          <button class="btn" onclick="prepareGenerate()">Watch Ad & Generate</button>
+          <button class="btn" onclick="generateNow(true)">Generate (no ad - TEST only)</button>
+          <button class="btn" onclick="clearQR()">Clear</button>
+        </div>
+
+        <div id="qrcode-wrap" style="margin-top:12px">
+          <div id="qrcode"></div>
+          <div id="qr-msg" class="small"></div>
+          <div class="actions">
+            <a id="download-link" class="btn" style="display:none" download="toolbox-qr.png">Download QR</a>
+            <button class="btn" id="share-btn" style="display:none" onclick="shareQR()">Share</button>
+          </div>
+        </div>
+
+        <div id="thank" style="display:none;margin-top:12px;background:#ecfdf5;padding:8px;border-radius:8px;color:#065f46">Thank you for using Toolbox - QR Generator</div>
+      </section>
+
+      <!-- ABOUT -->
+      <section id="about">
+        <button onclick="goHome()" style="margin-bottom:10px">◀ Back</button>
+        <h3>About</h3>
+        <p class="small">Toolbox - QR Generator (Demo). Version 1.0</p>
+        <p class="small">Privacy Policy: <a href="privacy-policy.html" target="_blank">Open privacy page</a></p>
+        <p class="small">Ads: Your app will show an ad before generating QR (Kodular AdMob interstitial recommended).</p>
+      </section>
+
+    </main>
+
+    <footer>
+      <div class="small">Made with ❤️ — Toolbox</div>
+    </footer>
+  </div>
+
+  <!-- include QR lib (cdnjs) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+  // --- simple navigation
+  document.querySelectorAll('[data-open]').forEach(el=>{
+    el.addEventListener('click', ()=>openSection(el.getAttribute('data-open')));
+  });
+  function openSection(id){
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    const sec = document.getElementById(id);
+    if(sec) sec.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function goHome(){
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // ========== Calculator ==========
+  let calcExp = '';
+  const screen = document.getElementById('calc-screen');
+  function calcPress(ch){
+    if(calcExp==='0' && ch!=='.') calcExp = ch;
+    else calcExp += ch;
+    screen.textContent = calcExp;
+  }
+  function calcClear(){ calcExp=''; screen.textContent='0'; }
+  function calcBack(){ calcExp = calcExp.slice(0,-1); screen.textContent=calcExp||'0'; }
+  function calcEval(){
+    try{
+      // sanitize: allow only digits . and operators
+      if(!/^[0-9+\-*/.() ]+$/.test(calcExp)) throw 'Invalid';
+      let r = Function('"use strict";return ('+calcExp+')')();
+      screen.textContent = String(r);
+      calcExp = String(r);
+    }catch(e){ screen.textContent='Error'; calcExp=''; }
+  }
+
+  // ========== Converters ==========
+  function weightConvert(){
+    const v = parseFloat(document.getElementById('w-value').value);
+    const from = document.getElementById('w-from').value;
+    const to = document.getElementById('w-to').value;
+    if(isNaN(v)){ document.getElementById('w-result').textContent='Enter valid value'; return; }
+    // convert to kg base
+    const toKg = {kg:1,g:0.001,lb:0.45359237,ton:1000};
+    let kg = v * toKg[from];
+    let out = kg / toKg[to];
+    document.getElementById('w-result').textContent = out + ' ' + to;
+  }
+
+  // Offline currency rates (example — realistic-ish)
+  const rates = {
+    USD:1.00,
+    INR:83.00, // 1 USD = 83 INR (example)
+    EUR:0.92,
+    GBP:0.80
+  };
+  function currencyConvert(){
+    const v = parseFloat(document.getElementById('c-value').value);
+    const from = document.getElementById('c-from').value;
+    const to = document.getElementById('c-to').value;
+    if(isNaN(v)){ document.getElementById('c-result').textContent='Enter valid amount'; return; }
+    // convert to USD base then to target
+    const usd = v / rates[from];
+    const out = usd * rates[to];
+    document.getElementById('c-result').textContent = out.toFixed(4) + ' ' + to;
+  }
+
+  function distanceConvert(){
+    const v = parseFloat(document.getElementById('d-value').value);
+    const from = document.getElementById('d-from').value;
+    const to = document.getElementById('d-to').value;
+    if(isNaN(v)){ document.getElementById('d-result').textContent='Enter valid value'; return; }
+    // convert to meters base
+    const toM = {m:1,km:1000,cm:0.01,ft:0.3048,mi:1609.344};
+    let m = v * toM[from];
+    let out = m / toM[to];
+    document.getElementById('d-result').textContent = out + ' ' + to;
+  }
+
+  // ========== QR Generation ==========
+  let qrcode = null;
+  let pendingFileData = null;
+  let pendingText = '';
+  const qrcodeEl = document.getElementById('qrcode');
+  const qrMsg = document.getElementById('qr-msg');
+  const dlLink = document.getElementById('download-link');
+  const shareBtn = document.getElementById('share-btn');
+
+  document.getElementById('qr-file').addEventListener('change', async (e)=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    document.getElementById('file-info').textContent = f.name + ' ('+Math.round(f.size/1024)+' KB)';
+    // for small files only - read as base64
+    if(f.size > 2048){
+      qrMsg.textContent = 'File >2KB — too large to encode directly. Please upload to a cloud and paste a URL instead.';
+      pendingFileData = null;
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const b64 = ev.target.result.split(',')[1];
+      // we'll create a tiny payload header
+      pendingFileData = `data:${f.type};base64,${b64}`;
+      qrMsg.textContent = 'Ready to encode small file into QR.';
+    };
+    reader.readAsDataURL(f);
+  });
+
+  function prepareGenerate(){
+    // This will trigger Kodular to show ad. In Kodular, detect URL starting with kodular://showad
+    // We navigate the webview to a special URL. Kodular must intercept and show the interstitial.
+    window.location.href = 'kodular://showad'; // Kodular will catch this and show ad, then call back to proceedAfterAd()
+  }
+
+  // direct generate (no ad) — for testing
+  function generateNow(noAd=false){
+    const text = document.getElementById('qr-text').value.trim();
+    if(pendingFileData){
+      createQR(pendingFileData);
+    } else if(text){
+      createQR(text);
+    } else {
+      qrMsg.textContent = 'Enter text or choose a small file first.';
+    }
+  }
+
+  // This function will be called by Kodular after ad is closed using WebViewer.Eval or by page directly in testing
+  function proceedAfterAd(){
+    // generate using current pending data
+    const text = document.getElementById('qr-text').value.trim();
+    if(pendingFileData){
+      createQR(pendingFileData);
+    } else if(text){
+      createQR(text);
+    } else {
+      qrMsg.textContent = 'Enter text or choose a small file first.';
+    }
+  }
+  // make it global so Kodular can call: window.proceedAfterAd()
+  window.proceedAfterAd = proceedAfterAd;
+
+  function createQR(data){
+    // clear old
+    qrcodeEl.innerHTML = '';
+    qrMsg.textContent = '';
+    // For reliability keep small size
+    try{
+      qrcode = new QRCode(qrcodeEl, {text:data, width:240, height:240, colorDark:"#000000", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M});
+    }catch(e){
+      qrMsg.textContent = 'Failed to create QR (data too large). Try URL instead.';
+      return;
+    }
+    // create PNG blob from canvas (QRCode.js uses table OR canvas depending) - we try to capture image
+    setTimeout(()=>{
+      // find img or canvas inside qrcodeEl
+      const img = qrcodeEl.querySelector('img');
+      if(img){
+        dlLink.href = img.src;
+        dlLink.style.display = 'inline-block';
+        dlLink.onclick = ()=>{ setTimeout(()=>{ showThank(); },400); };
+        shareBtn.style.display = (navigator.share ? 'inline-block' : 'none');
+        qrMsg.textContent = 'QR generated successfully.';
+      } else {
+        // maybe canvas
+        const canvas = qrcodeEl.querySelector('canvas');
+        if(canvas){
+          dlLink.href = canvas.toDataURL('image/png');
+          dlLink.style.display = 'inline-block';
+          dlLink.onclick = ()=>{ setTimeout(()=>{ showThank(); },400); };
+          shareBtn.style.display = (navigator.share ? 'inline-block' : 'none');
+          qrMsg.textContent = 'QR generated successfully.';
+        } else {
+          qrMsg.textContent = 'Could not extract image from QR generator.';
+        }
+      }
+    },200);
+  }
+
+  function clearQR(){
+    qrcodeEl.innerHTML = '';
+    dlLink.style.display = 'none';
+    shareBtn.style.display = 'none';
+    qrMsg.textContent = '';
+    pendingFileData = null;
+    document.getElementById('qr-file').value = '';
+    document.getElementById('qr-text').value = '';
+    document.getElementById('file-info').textContent = '';
+    document.getElementById('thank').style.display = 'none';
+  }
+
+  function showThank(){
+    document.getElementById('thank').style.display = 'block';
+    // hide after a short while (optional)
+    setTimeout(()=>{ /* keep it */ }, 2000);
+  }
+
+  async function shareQR(){
+    const href = dlLink.href;
+    if(navigator.share){
+      try{
+        const res = await fetch(href);
+        const blob = await res.blob();
+        const file = new File([blob],'toolbox-qr.png',{type:blob.type});
+        await navigator.share({files:[file],title:'Toolbox QR',text:'QR from Toolbox'});
+      }catch(e){
+        alert('Share failed: '+e);
+      }
+    } else {
+      alert('Share not supported on this device/browser.');
+    }
+  }
+
+  // helper: allow kodular to call JS directly after ad: window.generateQRFromPending or window.proceedAfterAd
+  window.generateQRFromPending = proceedAfterAd;
+
+  // init
+  goHome();
+  </script>
+</body>
+</html>
